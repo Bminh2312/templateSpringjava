@@ -8,12 +8,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class StudentService implements IStudentService{
     @Autowired
     private StudentRepository studentRepository;
+
+    @Override
+    public List<StudentEntity> getAllStudent() {
+        return studentRepository.findAll();
+    }
 
     @Override
     public StudentEntity getStudentById(Long id) {

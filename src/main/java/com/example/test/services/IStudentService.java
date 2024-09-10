@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IStudentService {
+
+    List<StudentEntity> getAllStudent();
     StudentEntity getStudentById(Long id);
     Page<StudentResponse>getAllStudentsPage(PageRequest pageRequest);
     StudentEntity save(StudentEntity studentEntity);

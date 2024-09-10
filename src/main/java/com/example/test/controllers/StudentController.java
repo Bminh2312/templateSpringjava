@@ -1,6 +1,8 @@
 package com.example.test.controllers;
 
+import com.example.test.exceptions.ResourceNotFoundException;
 import com.example.test.models.StudentEntity;
+import com.example.test.responses.ApiResponse;
 import com.example.test.responses.StudentListResponse;
 import com.example.test.responses.StudentResponse;
 import com.example.test.services.StudentService;
@@ -18,26 +20,42 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("${api.prefix}/student")
 public class StudentController {
 
     @Autowired
     private StudentService studentService;
 
+    @GetMapping("/getAll")
+    public ResponseEntity<ApiResponse> getAll(){
+        ApiResponse apiResponse = ApiResponse.builder()
+                .status(HttpStatus.OK.value())
+                .message("OK")
+                .data(studentService.getAllStudent())
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
     @GetMapping("/pagingStudent/{page}")
     public ResponseEntity<StudentListResponse> paging(@PathVariable("page") int page,
                                                        @RequestParam("limit") int limit) {
-        PageRequest pageRequest = PageRequest.of(
-                page, limit,
-                Sort.by("createAt").descending()
-        );
-        Page<StudentResponse> studentsResponsePage = studentService.getAllStudentsPage(pageRequest);
-        int totalPage = studentsResponsePage.getTotalPages();
-        List<StudentResponse> responseStudent = studentsResponsePage.getContent();
-        return ResponseEntity.ok(StudentListResponse.builder()
-                .studentResponses(responseStudent)
-                .totalPages(totalPage)
-                .build());
+        try{
+            PageRequest pageRequest = PageRequest.of(
+                    page, limit,
+                    Sort.by("createAt").descending()
+            );
+            Page<StudentResponse> studentsResponsePage = studentService.getAllStudentsPage(pageRequest);
+            int totalPage = studentsResponsePage.getTotalPages();
+            List<StudentResponse> responseStudent = studentsResponsePage.getContent();
+            return ResponseEntity.ok(StudentListResponse.builder()
+                    .studentResponses(responseStudent)
+                    .totalPages(totalPage)
+                    .build());
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     @PostMapping("/create/student")
@@ -47,7 +65,12 @@ public class StudentController {
                     .map(FieldError::getDefaultMessage).toList();
             return new ResponseEntity<>(errors,HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(studentService.save(student), HttpStatus.OK);
+        ApiResponse apiResponse = ApiResponse.builder()
+                .status(HttpStatus.OK.value())
+                .message("OK")
+                .data(studentService.save(student))
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
     @PutMapping("/update/student/{id}")
@@ -56,13 +79,34 @@ public class StudentController {
             List<String> errors =bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage).toList();
             return new ResponseEntity<>(errors,HttpStatus.BAD_REQUEST);
+        }else{
+            StudentEntity studentEntity = studentService.getStudentById(id);
+            if(student == null){
+                throw new ResourceNotFoundException("Khong tim thay student voi id = "+id);
+            }
+            studentService.update(id,studentEntity);
+            ApiResponse apiResponse = ApiResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .message("Updated successfully")
+                    .data(studentEntity)
+                    .build();
+            return ResponseEntity.ok(apiResponse);
         }
-        return new ResponseEntity<>(studentService.update(id,student), HttpStatus.OK);
+
     }
 
     @DeleteMapping("/delete/student/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") Long id){
+        StudentEntity student = studentService.getStudentById(id);
+        if(student == null){
+            throw new ResourceNotFoundException("Khong tim thay student voi id = "+id);
+        }
         studentService.delete(id);
-        return ResponseEntity.ok().body("Delete SuccessFull");
+        ApiResponse apiResponse = ApiResponse.builder()
+                .status(HttpStatus.OK.value())
+                .message("Deleted successfully")
+                .data(null)
+                .build();
+        return ResponseEntity.ok(apiResponse);
     }
 }
