@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handlerValidationException(MethodArgumentNotValidException ex){
         StringBuilder errMess = new StringBuilder();
@@ -32,6 +33,7 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.badRequest().body(apiResponse);
     }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse> handlerResourceNotfoundException(ResourceNotFoundException ex){
         ApiResponse apiResponse = ApiResponse.builder()
