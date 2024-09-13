@@ -1,22 +1,59 @@
 package com.example.test.services;
 
+import ch.qos.logback.core.util.StringUtil;
+import com.example.test.dtos.StudentImageDTO;
 import com.example.test.models.Rank;
 import com.example.test.models.StudentEntity;
+import com.example.test.models.StudentImage;
+import com.example.test.repositories.StudentImageRepository;
 import com.example.test.repositories.StudentRepository;
 import com.example.test.responses.StudentResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class StudentService implements IStudentService{
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private StudentImageRepository studentImageRepository;
+
+    @Override
+    public StudentImage saveStudentImage(Long studentId, StudentImageDTO studentImageDTO) {
+        StudentEntity student = getStudentById(studentId);
+        int size =studentImageRepository.findByStudentId(studentId).size();
+        if(size>= 4){
+            throw new InvalidParameterException("Mỗi sinh viên tối đa 4 ảnh");
+        }
+        StudentImage studentImage = StudentImage.builder()
+                .student(student)
+                .imageUrl(studentImageDTO.getImageUrl())
+                .build();
+
+        return studentImageRepository.save(studentImage);
+    }
+
+    @Override
+    public List<StudentImage> getAllStudentImages(Long studentId) {
+        return studentImageRepository.findByStudentId(studentId);
+    }
 
     @Override
     public List<StudentEntity> getAllStudent() {
@@ -70,4 +107,6 @@ public class StudentService implements IStudentService{
     public void delete(Long id) {
         studentRepository.deleteById(id);
     }
+
+
 }

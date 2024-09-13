@@ -19,4 +19,7 @@ public interface StudentRepository extends JpaRepository<StudentEntity,Long> {
 
     @Query("SELECT s From StudentEntity s Where s.rank = :rank AND Year(s.dob) = :dob")
     Page<StudentEntity> filterRankAndDOB(Rank rank, int dob, PageRequest pageRequest);
+//
+//    @Query("SELECT s FROM StudentEntity s" +
+//            "WHERE ")
 }
